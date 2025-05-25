@@ -37,7 +37,7 @@
       "./templates/modern",
       "./templates/custom_template"
     ],
-    "postProcessors": ["ExtractSearchIndexEx"],
+    "postProcessors": ["ExtractSearchIndex", "ExtractSearchIndexEx"],
     "globalMetadata": {
       "_appName": "mysite",
       "_appTitle": "mysite",

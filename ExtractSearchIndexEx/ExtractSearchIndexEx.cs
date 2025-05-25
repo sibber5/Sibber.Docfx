@@ -41,7 +41,7 @@ public partial class ExtractSearchIndexEx : IPostProcessor
     };
 
     public string Name => nameof(ExtractSearchIndexEx);
-    public const string IndexFileName = "index_ex.json";
+    public const string IndexFileName = "index.json";
 
     internal bool UseMetadata { get; set; } = false;
     internal bool UseMetadataTitle { get; set; } = true;
@@ -130,6 +130,9 @@ public partial class ExtractSearchIndexEx : IPostProcessor
             }
         }
 
+        // [mod] added the next 2 lines:
+        if (!EnvironmentContext.FileAbstractLayer.Exists(indexDataFilePath)) throw new InvalidOperationException("index.json not found. Make sure ExtractSearchIndex successfully finishes.");
+        File.Delete(EnvironmentContext.FileAbstractLayer.GetPhysicalPath(indexDataFilePath));
         JsonUtility.Serialize(indexDataFilePath, indexData, indented: true);
 
         // [mod] don't add index_ex.json to manifest as resource file, since it's meant to overwrite index.json after all the post processors run
@@ -176,13 +179,16 @@ public partial class ExtractSearchIndexEx : IPostProcessor
         string? keywords = null;
 
         bool isMRef = metadata != null && metadata.TryGetValue("IsMRef", out var isMRefMetadata) && (bool)isMRefMetadata;
-        // [mod] modified the next 2 lines:
+        // [mod] modified the next section:
         bool useMetadata = UseMetadata && isMRef;
+        bool useMetadataForTitle = UseMetadataTitle && useMetadata && metadata?["Title"] is not null;
         if (useMetadata)
         {
-            typeTitle = UseMetadataTitle
-                ? (string?)metadata?["Title"] ?? ExtractTitleFromHtml(html)
+            Debug.Assert(!useMetadataForTitle || metadata?["Title"] is not null);
+            typeTitle = useMetadataForTitle
+                ? (string)metadata?["Title"]!
                 : ExtractTitleFromHtml(html);
+        // end section
 
             var htmlSummary = (string?)metadata?["Summary"];
             if (!string.IsNullOrEmpty(htmlSummary))
@@ -237,14 +243,15 @@ public partial class ExtractSearchIndexEx : IPostProcessor
                 // TODO: fix fields for enum
                 if ((SearchScopes.HasFlag(SearchScopes.Methods) && sectionId == "methods")
                     || (SearchScopes.HasFlag(SearchScopes.Properties) && sectionId == "properties")
-                    || (SearchScopes.HasFlag(SearchScopes.Fields) && sectionId == "fields"))
+                    || (SearchScopes.HasFlag(SearchScopes.Fields) && sectionId == "fields")
+                    || (SearchScopes.HasFlag(SearchScopes.Events) && sectionId == "events"))
                 {
                     if (c.Name == "h3")
                     {
                         if (isParsing) yield return new(curHref, curTitle, curKeywords, curSummary);
 
                         curHref = $"{href}#{c.Id}";
-                        curTitle = GetTitleForSearchIndexItem(sectionId, c, typeTitle, useMetadata);
+                        curTitle = GetTitleForSearchIndexItem(sectionId, c, typeTitle, useMetadataForTitle);
                         curKeywords = useMetadata ? GetKeywordsForTitle(curTitle) : null;
 
                         isParsing = true;
@@ -277,18 +284,20 @@ public partial class ExtractSearchIndexEx : IPostProcessor
     }
 
     // [mod] added method:
-    private string GetTitleForSearchIndexItem(string sectionId, HtmlNode node, string typeTitle, bool useMetadata)
+    private string GetTitleForSearchIndexItem(string sectionId, HtmlNode node, string typeTitle, bool usedMetadataForTitle)
     {
         string member = NormalizeContent(node.InnerText).ToString();
 
         StringBuilder titleBuilder = new();
         var titleSpan = typeTitle.AsSpan();
-        if (useMetadata && UseMetadataTitle)
+        if (!usedMetadataForTitle)
         {
             titleBuilder.Append(sectionId switch
             {
                 "methods" => "Method ",
                 "properties" => "Property ",
+                "fields" => "Field ",
+                "events" => "Event ",
                 _ => throw new NotSupportedException($"Unsupported search scope: {sectionId}."),
             });
 
@@ -305,6 +314,10 @@ public partial class ExtractSearchIndexEx : IPostProcessor
                     typeEnd = titleSpan.LastIndexOf('|');
                     while (typeEnd > 0 && char.IsWhiteSpace(titleSpan[typeEnd - 1])) typeEnd--;
                 }
+            }
+            else
+            {
+                typeEnd += typeStart;
             }
 
             titleBuilder.Append(titleSpan[typeStart..typeEnd]);
