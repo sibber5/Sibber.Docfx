@@ -1,0 +1,7 @@
+a.xref {
+    text-decoration-line: none;
+}
+
+a.xref:hover {
+    text-decoration-line: underline;
+}

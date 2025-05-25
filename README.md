@@ -1,0 +1,41 @@
+# Sibber.Docfx
+
+This repo has the docfx config that I use for my library docs sites. It uses `fuse.js` in place of `lunr.js`, and the `ExtractSearchIndexEx` post processor which I [forked from the docfx repo](https://github.com/dotnet/docfx/blob/44383167ece82d4deb7c2062de1a2e34b32607e9/src/Docfx.Build/PostProcessors/ExtractSearchIndex.cs) in order to index all public members of types in addition to the types themselves.
+
+# Usage
+
+1. replace `"mysite"` in [`./docfx/docfx.json`](./docfx/docfx.json) with site name
+2. fill in the urls in [`./docfx/templates/custom_template/public/main.js`](./docfx/templates/custom_template/public/main.js)
+3. run [`publish_plugins.bat`](./publish_plugins.bat)
+4. [Optional] configure `fuse.js` options in [`public/search-worker.min.js`](./docfx/templates/modern/public/search-worker.min.js)
+4. **After building the site, delete `index.json` and rename `index_ex.json` to `index.json`**
+
+## ExtractSearchIndexEx
+
+The `ExtractSearchIndexEx` post processor has 2 additional configuration options (set in `globalMetadata` in `docfx.json`):
+ - `"_searchIndexStripSiteNameFromTitle": bool` (default: `false`) specifies whether to remove the site name from the search result titels, e.g. `Class SomeNamespace.SomeClass | SiteName` becomes `Class SomeNamespace.SomeClass`. *This only has an effect if `_searchIndexUseMetadataTitle` is set to `true`.*
+ - `"_searchIndexScopes": string[]` (default: `["All"]`) specifies what to be indexed. The possible values are the defined enum value in [`SearchScopes`](./ExtractSearchIndexEx/SearchScopes.cs). e.g. `["Types", "Methods"]`. `["Types"]` yields identical bevaiour to the built in `ExtractSearchIndex`.
+
+# Notes
+
+## `modern` template
+
+The `modern` template is just the normal docfx (compiled) modern template exported with `docfx template export modern` with the following changes:
+ - [`public/search-worker.min.js`](./docfx/templates/modern/public/search-worker.min.js): replaced with fuse.js impl https://gist.github.com/filzrev/9a046c40f6df63d01f40018d8a19bd47 and modified
+ - `public/search-worker.min.js.map`: deleted
+ - [`public/docfx.min.js`](/docfx/templates/modern/public/docfx.min.js):
+    - Line 17, removed `+"?q="+It` (search query from redirect url when clicking on a search result) so that fragment identifiers work
+    - Line 15, removed `let{lunrLanguages:e}=await D();i.postMessage({init:{lunrLanguages:e}});`
+    - Line 6, removed `, "lunrLanguages"`
+ - `public/docfx.min.js.map`:
+    - Line 4, removed corresponding ` + '?q=' + query`
+    - Line 4, removed corresponsing `const { lunrLanguages } = await options()\n  worker.postMessage({ init: { lunrLanguages } })\n\n  `
+ - Deleted unused lunr files:
+    - `public/chunk-DTUU2GN4.min.js` and `public/chunk-DTUU2GN4.min.js.map` (lunr japanese, not sure why its not named lunr.ja like the other localization files)
+    - All files in [`public/`](/docfx/templates/modern/public/) that being with `lunr`
+
+# License
+
+The file [`./ExtractSearchIndexEx/ExtractSearchIndexEx.cs`](./ExtractSearchIndexEx/ExtractSearchIndexEx.cs) was taken from [`Docfx.Build`, github.com/dotnet/docfx](https://github.com/dotnet/docfx/blob/44383167ece82d4deb7c2062de1a2e34b32607e9/src/Docfx.Build/PostProcessors/ExtractSearchIndex.cs), MIT License - Copyright (c) .NET Foundation and Contributors. See the license notice at the top of the file for more info.
+
+The rest of the [`ExtractSearchIndexEx`](./ExtractSearchIndexEx/) plugin and modifications to the file mentioned above are licensed under the MIT License - see [`./ExtractSearchIndexEx/LICENSE`](./ExtractSearchIndexEx/LICENSE) - unless otherwise stated in specific files or sections. See individual files for exceptions.

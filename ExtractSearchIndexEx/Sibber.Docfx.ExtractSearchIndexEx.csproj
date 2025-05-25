@@ -1,0 +1,21 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Docfx.Common" Version="2.78.3" />
+    <PackageReference Include="Docfx.Plugins" Version="2.78.3" />
+    <PackageReference Include="HtmlAgilityPack" Version="1.11.72" />
+    <PackageReference Include="System.Composition" Version="8.0.0" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <None Remove="Sibber.Docfx.ExtractSearchIndexEx.slnx" />
+    <None Remove="LICENSE" />
+  </ItemGroup>
+
+</Project>
