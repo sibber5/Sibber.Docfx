@@ -9,13 +9,11 @@
 // Original work: https://github.com/dotnet/docfx/blob/44383167ece82d4deb7c2062de1a2e34b32607e9/src/Docfx.Build/PostProcessors/ExtractSearchIndex.cs
 
 using System.Collections.Immutable;
+using System.ComponentModel;
 using System.Composition;
 using System.Diagnostics;
 using System.Net;
 using System.Text;
-using System.Text.Encodings.Web;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 using Docfx.Common;
 using Docfx.Plugins;
@@ -69,6 +67,10 @@ public partial class ExtractSearchIndexEx : IPostProcessor
                 if (Enum.TryParse(scopeStr, true, out SearchScopes scope))
                 {
                     SearchScopes |= scope;
+                }
+                else
+                {
+                    throw new InvalidEnumArgumentException($"Invalid scope: {scopeStr}.");
                 }
             }
         }
@@ -149,73 +151,127 @@ public partial class ExtractSearchIndexEx : IPostProcessor
         return manifest;
     }
 
-    // [mod] modified the next line:
+    // [mod] modified the following method:
     internal IEnumerable<SearchIndexItem> ExtractItems(HtmlDocument html, string href, Dictionary<string, object>? metadata = null)
     {
-        // [mod] added the next line:
         if (SearchScopes == SearchScopes.None) yield break;
-
-        var contentBuilder = new StringBuilder();
 
         if (html.DocumentNode.SelectNodes("/html/head/meta[@name='searchOption' and @content='noindex']") != null)
         {
             yield break;
         }
 
+        string htmlTitle = ExtractTitleFromHtml(html);
+        bool isEnum = htmlTitle.AsSpan().StartsWith("Enum");
+
         // Select content between the data-searchable class tag
         var nodes = html.DocumentNode.SelectNodes("//*[contains(@class,'data-searchable')]") ?? Enumerable.Empty<HtmlNode>();
-        // Select content between the article tag
-        nodes = nodes.Union(html.DocumentNode.SelectNodes("//article") ?? Enumerable.Empty<HtmlNode>());
-
-        // [mod] added the next line:
-        var indexableNodes = nodes.ToList();
-        foreach (var node in indexableNodes)
+        // Select content between the article tag, unless it's an enum because its article tag isn't split up into sections so they won't be parsed; Enum value parsing has a special case.
+        if (!isEnum)
         {
-            ExtractTextFromNode(node, contentBuilder);
+            var articleNodes = html.DocumentNode.SelectNodes("//article");
+            if (articleNodes is not null) nodes = nodes.Union(articleNodes).ToList();
         }
-
-        string typeTitle;
-        string? summary = null;
-        string? keywords = null;
 
         bool isMRef = metadata != null && metadata.TryGetValue("IsMRef", out var isMRefMetadata) && (bool)isMRefMetadata;
-        // [mod] modified the next section:
         bool useMetadata = UseMetadata && isMRef;
         bool useMetadataForTitle = UseMetadataTitle && useMetadata && metadata?["Title"] is not null;
-        if (useMetadata)
-        {
-            Debug.Assert(!useMetadataForTitle || metadata?["Title"] is not null);
-            typeTitle = useMetadataForTitle
-                ? (string)metadata?["Title"]!
-                : ExtractTitleFromHtml(html);
-        // end section
 
-            var htmlSummary = (string?)metadata?["Summary"];
-            if (!string.IsNullOrEmpty(htmlSummary))
-            {
-                var htmlDocument = new HtmlDocument();
-                htmlDocument.LoadHtml(htmlSummary);
-                var htmlRootNode = htmlDocument.DocumentNode.FirstChild;
-                var summaryBuilder = new StringBuilder();
-                ExtractTextFromNode(htmlRootNode, summaryBuilder);
-                summary = NormalizeContent(summaryBuilder.ToString()).ToString();
-            }
+        string typeTitle = useMetadataForTitle ? (string)metadata?["Title"]! : htmlTitle;
 
-            keywords = GetKeywordsForTitle(typeTitle);
-        }
-        else
+        if (SearchScopes.HasFlag(SearchScopes.Types))
         {
-            typeTitle = ExtractTitleFromHtml(html);
-            summary = NormalizeContent(contentBuilder.ToString()).ToString();
+            yield return ParseType();
         }
 
-        // [mod] added the next section (until end of method):
-
-        if (SearchScopes.HasFlag(SearchScopes.Types)) yield return new(href, typeTitle, keywords, summary);
-
+        // if no other flags are set
         if (SearchScopes == SearchScopes.Types) yield break;
 
-        foreach (HtmlNode node in indexableNodes)
+        if (isEnum && SearchScopes.HasFlag(SearchScopes.EnumValues))
+        {
+            foreach (var item in ParseEnumValues()) yield return item;
+        }
+
+        // ReSharper disable once PossibleMultipleEnumeration (node collection is not deferred)
+        foreach (HtmlNode node in nodes)
+        {
+            foreach (var item in ParseOtherIndexItems(node)) yield return item;
+        }
+
+        SearchIndexItem ParseType()
+        {
+            string? typeSummary;
+            string? typeKeywords = null;
+            if (useMetadata)
+            {
+                var htmlSummary = (string?)metadata?["Summary"];
+                if (!string.IsNullOrEmpty(htmlSummary))
+                {
+                    var htmlDocument = new HtmlDocument();
+                    htmlDocument.LoadHtml(htmlSummary);
+                    var htmlRootNode = htmlDocument.DocumentNode.FirstChild;
+                    var summaryBuilder = new StringBuilder();
+                    ExtractTextFromNode(htmlRootNode, summaryBuilder);
+                    typeSummary = NormalizeContent(summaryBuilder.ToString()).ToString();
+                }
+                else
+                {
+                    typeSummary = NormalizeContent(html.DocumentNode.SelectSingleNode("//head/meta[@name='description']")?.GetAttributeValue("content", null)).ToString();
+                }
+
+                typeKeywords = GetKeywordsForTitle(typeTitle);
+            }
+            else
+            {
+                var contentBuilder = new StringBuilder();
+                // ReSharper disable once PossibleMultipleEnumeration (node collection is not deferred)
+                foreach (var node in nodes)
+                {
+                    ExtractTextFromNode(node, contentBuilder);
+                }
+
+                typeSummary = NormalizeContent(contentBuilder.ToString()).ToString();
+            }
+
+            return new(href, typeTitle, typeKeywords, typeSummary);
+        }
+
+        IEnumerable<SearchIndexItem> ParseEnumValues()
+        {
+            var valueNodes = html.DocumentNode.SelectSingleNode("//article/h2[@id='fields']/following-sibling::dl[@class='parameters']").ChildNodes;
+
+            string curHref = "";
+            string curTitle = "";
+            string? curKeywords = null;
+            string? curSummary = null;
+
+            bool isParsingField = false;
+            foreach (var node in valueNodes)
+            {
+                if (node.Name == "dt" && !string.IsNullOrEmpty(node.Id))
+                {
+                    if (isParsingField) yield return new(curHref, curTitle, curKeywords, curSummary);
+
+                    curHref = $"{href}#{node.Id}";
+                    curTitle = GetTitleForSearchIndexItem("enum values", node, typeTitle, useMetadataForTitle);
+                    curKeywords = useMetadata ? GetKeywordsForTitle(curTitle) : null;
+                    curSummary = null;
+
+                    isParsingField = true;
+                    continue;
+                }
+
+                if (isParsingField && node.Name == "dd")
+                {
+                    curSummary = node.InnerText;
+                    curSummary = string.IsNullOrEmpty(curSummary) ? null : NormalizeContent(curSummary).ToString().ReplaceLineEndings(" ");
+                }
+            }
+
+            if (isParsingField) yield return new(curHref, curTitle, curKeywords, curSummary);
+        }
+
+        IEnumerable<SearchIndexItem> ParseOtherIndexItems(HtmlNode node)
         {
             string? sectionId = null;
 
@@ -240,7 +296,6 @@ public partial class ExtractSearchIndexEx : IPostProcessor
                     continue;
                 }
 
-                // TODO: fix fields for enum
                 if ((SearchScopes.HasFlag(SearchScopes.Methods) && sectionId == "methods")
                     || (SearchScopes.HasFlag(SearchScopes.Properties) && sectionId == "properties")
                     || (SearchScopes.HasFlag(SearchScopes.Fields) && sectionId == "fields")
@@ -253,6 +308,7 @@ public partial class ExtractSearchIndexEx : IPostProcessor
                         curHref = $"{href}#{c.Id}";
                         curTitle = GetTitleForSearchIndexItem(sectionId, c, typeTitle, useMetadataForTitle);
                         curKeywords = useMetadata ? GetKeywordsForTitle(curTitle) : null;
+                        curSummary = null;
 
                         isParsing = true;
                         continue;
@@ -265,10 +321,10 @@ public partial class ExtractSearchIndexEx : IPostProcessor
 
                         yield return new(curHref, curTitle, curKeywords, curSummary);
                         isParsing = false;
-                        continue;
-                    }
 
-                    continue;
+                        // If in the future we want to parse other sections, make sure to add the following line:
+                        // continue;
+                    }
                 }
             }
 
@@ -286,7 +342,12 @@ public partial class ExtractSearchIndexEx : IPostProcessor
     // [mod] added method:
     private string GetTitleForSearchIndexItem(string sectionId, HtmlNode node, string typeTitle, bool usedMetadataForTitle)
     {
-        string member = NormalizeContent(node.InnerText).ToString();
+        var memberName = NormalizeContent(node.InnerText);
+        // if (sectionId is "properties" or "fields" or "enum value")
+        // {
+        //     int memberNameEnd = memberName.IndexOf('=');
+        //     if (memberNameEnd != -1) memberName = memberName[..memberNameEnd].TrimEnd();
+        // }
 
         StringBuilder titleBuilder = new();
         var titleSpan = typeTitle.AsSpan();
@@ -298,6 +359,7 @@ public partial class ExtractSearchIndexEx : IPostProcessor
                 "properties" => "Property ",
                 "fields" => "Field ",
                 "events" => "Event ",
+                "enum values" => "Enum Value ",
                 _ => throw new NotSupportedException($"Unsupported search scope: {sectionId}."),
             });
 
@@ -322,14 +384,14 @@ public partial class ExtractSearchIndexEx : IPostProcessor
 
             titleBuilder.Append(titleSpan[typeStart..typeEnd]);
             titleBuilder.Append('.');
-            titleBuilder.Append(member);
+            titleBuilder.Append(memberName);
             titleBuilder.Append(titleSpan[typeEnd..]);
         }
         else
         {
             titleBuilder.Append(titleSpan);
             titleBuilder.Append('.');
-            titleBuilder.Append(member);
+            titleBuilder.Append(memberName);
         }
 
         return titleBuilder.ToString();
@@ -338,7 +400,8 @@ public partial class ExtractSearchIndexEx : IPostProcessor
     private string ExtractTitleFromHtml(HtmlDocument html)
     {
         var titleNode = html.DocumentNode.SelectSingleNode("//head/title");
-        var originalTitle = titleNode?.InnerText;
+        // [mod] modified the next line:
+        var originalTitle = titleNode?.InnerText ?? html.DocumentNode.SelectSingleNode("//head/meta[@name='title']")?.GetAttributeValue("content", null);
 
         // [mod] modified the next section (until end of method):
         var title = NormalizeContent(originalTitle);

@@ -488,3 +488,5 @@ push.bat
 # docfx
 _site/
 api/
+
+publish_test_debug.bat

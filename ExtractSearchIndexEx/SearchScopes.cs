@@ -10,7 +10,8 @@ public enum SearchScopes
     Types = 1,
     Methods = 2,
     Properties = 4,
-    Fields = 8,
-    Events = 16,
-    All = Types | Methods | Properties | Fields | Events,
+    Events = 8,
+    Fields = 16,
+    EnumValues = 32,
+    All = Types | Methods | Properties | Events | Fields | EnumValues,
 }
