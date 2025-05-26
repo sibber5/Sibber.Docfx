@@ -17,7 +17,7 @@ This repo has the docfx config that I use for my library docs sites. It uses `fu
 
 The `ExtractSearchIndexEx` post processor has 2 additional configuration options (set in `globalMetadata` in `docfx.json`):
  - `"_searchIndexStripSiteNameFromTitle": bool` (default: `false`) specifies whether to remove the site name from the search result titels, e.g. `Class SomeNamespace.SomeClass | SiteName` becomes `Class SomeNamespace.SomeClass`. *This only has an effect if `_searchIndexUseMetadataTitle` is set to `false` (or `_searchIndexUseMetadata` is `false`), or if the title metadata does not exist.*
- - `"_searchIndexScopes": string[]` (default: `["All"]`) specifies what to be indexed. The possible values are the defined enum value in [`SearchScopes`](./ExtractSearchIndexEx/SearchScopes.cs). e.g. `["Types", "Methods"]`. `["Types"]` yields identical bevaiour to the built in `ExtractSearchIndex`.
+ - `"_searchIndexScopes": string[]` (default: `["All"]`) specifies what to be indexed. The possible values are the defined enum values in [`SearchScopes`](./ExtractSearchIndexEx/SearchScopes.cs). e.g. `["Types", "Methods"]`. `["Types"]` yields identical bevaiour to the built in `ExtractSearchIndex`.
 
 # Notes
 
