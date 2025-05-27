@@ -24,7 +24,7 @@ namespace Sibber.Docfx.ExtractSearchIndexEx;
 [Export(nameof(ExtractSearchIndexEx), typeof(IPostProcessor))]
 public partial class ExtractSearchIndexEx : IPostProcessor
 {
-    [GeneratedRegex(@"\s+")]
+    [GeneratedRegex(@"(\s*\n\s*)|\s+")]
     private static partial Regex s_regexWhiteSpace();
 
     [GeneratedRegex(@"[a-z0-9]+|[A-Z0-9]+[a-z0-9]*|[0-9]+")]
@@ -212,11 +212,11 @@ public partial class ExtractSearchIndexEx : IPostProcessor
                     var htmlRootNode = htmlDocument.DocumentNode.FirstChild;
                     var summaryBuilder = new StringBuilder();
                     ExtractTextFromNode(htmlRootNode, summaryBuilder);
-                    typeSummary = NormalizeContent(summaryBuilder.ToString()).ToString();
+                    typeSummary = NormalizeSummary(summaryBuilder.ToString());
                 }
                 else
                 {
-                    typeSummary = NormalizeContent(html.DocumentNode.SelectSingleNode("//head/meta[@name='description']")?.GetAttributeValue("content", null)).ToString();
+                    typeSummary = NormalizeSummary(html.DocumentNode.SelectSingleNode("//head/meta[@name='description']")?.GetAttributeValue("content", null));
                 }
 
                 typeKeywords = GetKeywordsForTitle(typeTitle);
@@ -230,7 +230,7 @@ public partial class ExtractSearchIndexEx : IPostProcessor
                     ExtractTextFromNode(node, contentBuilder);
                 }
 
-                typeSummary = NormalizeContent(contentBuilder.ToString()).ToString();
+                typeSummary = NormalizeSummary(contentBuilder.ToString());
             }
 
             return new(href, typeTitle, typeKeywords, typeSummary);
@@ -263,8 +263,7 @@ public partial class ExtractSearchIndexEx : IPostProcessor
 
                 if (isParsingField && node.Name == "dd")
                 {
-                    curSummary = node.InnerText;
-                    curSummary = string.IsNullOrEmpty(curSummary) ? null : NormalizeContent(curSummary).ToString().ReplaceLineEndings(" ");
+                    curSummary = NormalizeSummary(node.InnerText);
                 }
             }
 
@@ -316,8 +315,7 @@ public partial class ExtractSearchIndexEx : IPostProcessor
 
                     if (isParsing && c.HasClass("summary"))
                     {
-                        curSummary = c.InnerText;
-                        curSummary = string.IsNullOrEmpty(curSummary) ? null : NormalizeContent(curSummary).ToString().ReplaceLineEndings(" ");
+                        curSummary = NormalizeSummary(c.InnerText);
 
                         yield return new(curHref, curTitle, curKeywords, curSummary);
                         isParsing = false;
@@ -329,6 +327,15 @@ public partial class ExtractSearchIndexEx : IPostProcessor
             }
 
             if (isParsing) yield return new(curHref, curTitle, curKeywords, curSummary);
+        }
+
+        string? NormalizeSummary(string? s)
+        {
+            if (string.IsNullOrEmpty(s)) return null;
+
+            var res = NormalizeContent(s);
+            int trailingDot = res.LastIndexOf('.');
+            return trailingDot == -1 ? res.ToString() : res[..trailingDot].TrimEnd().ToString();
         }
 
         static string GetKeywordsForTitle(string title)
@@ -409,7 +416,7 @@ public partial class ExtractSearchIndexEx : IPostProcessor
         return (stripIdx == -1 ? title : title[..stripIdx]).TrimEnd().ToString();
     }
 
-    private ReadOnlySpan<char> NormalizeContent(string? str)
+    private ReadOnlySpan<char> NormalizeContent(string? str, bool keepNewLines = false)
     {
         if (string.IsNullOrEmpty(str))
         {
@@ -418,7 +425,10 @@ public partial class ExtractSearchIndexEx : IPostProcessor
 
         str = WebUtility.HtmlDecode(str);
         // [mod] modified the next line:
-        return s_regexWhiteSpace().Replace(str, " ").AsSpan().Trim();
+        return (keepNewLines
+            ? s_regexWhiteSpace().Replace(str, m => m.Groups[1].Success ? "\n" : " ")
+            : s_regexWhiteSpace().Replace(str, " "))
+            .AsSpan().Trim();
     }
 
     private static string[] GetStems(string str)

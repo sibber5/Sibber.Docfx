@@ -5,3 +5,26 @@ a.xref {
 a.xref:hover {
     text-decoration-line: underline;
 }
+
+.item-title a {
+    color: var(--bs-link-color);
+    text-decoration-line: none;
+}
+
+.item-title a:hover {
+    text-decoration-line: underline;
+}
+
+.item-href {
+    color: unset !important;
+    font-style: oblique;
+    opacity: 0.6;
+    margin-top: -0.4em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.item-brief {
+    font-size: medium !important;
+}
