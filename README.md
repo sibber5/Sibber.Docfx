@@ -2,6 +2,8 @@
 
 This repo has the docfx config that I use for my library docs sites. It uses `fuse.js` in place of `lunr.js`, and the `ExtractSearchIndexEx` post processor which I [forked from the docfx repo](https://github.com/dotnet/docfx/blob/44383167ece82d4deb7c2062de1a2e34b32607e9/src/Docfx.Build/PostProcessors/ExtractSearchIndex.cs) in order to index all public members of types in addition to the types themselves.
 
+It also includes a Github Actions [deployment workflow](./github_actions/deploy-docfx-to-github-pages.yaml), which builds the docfx API metadata and site, and then configures GitHub Pages and deploys to it. See [section in Usage](#github-actions-deployment-workflow) for more details.
+
 # Usage
 
 > [!IMPORTANT]  
@@ -19,6 +21,17 @@ This repo has the docfx config that I use for my library docs sites. It uses `fu
 The `ExtractSearchIndexEx` post processor has 2 additional configuration options (set in `globalMetadata` in `docfx.json`):
  - `"_searchIndexStripSiteNameFromTitle": bool` (default: `false`) specifies whether to remove the site name from the search result titels, e.g. `Class SomeNamespace.SomeClass | SiteName` becomes `Class SomeNamespace.SomeClass`. *This only has an effect if `_searchIndexUseMetadataTitle` is set to `false` (or `_searchIndexUseMetadata` is `false`), or if the title metadata does not exist.*
  - `"_searchIndexScopes": string[]` (default: `["All"]`) specifies what to be indexed. The possible values are the defined enum values in [`SearchScopes`](./ExtractSearchIndexEx/SearchScopes.cs). e.g. `["Types", "Methods"]`. `["Types"]` would index the same symbols as the built in `ExtractSearchIndex`.
+
+## Github Actions deployment workflow
+
+The [deployment workflow](./github_actions/deploy-docfx-to-github-pages.yaml) requires GitHub Pages 'Build and deployment' source to be set to 'GitHub Actions' (in the GitHub repository settings, under 'Pages').
+
+It is triggered when a tag that matches `v[0-9]+.[0-9]+*` is pushed.  
+If you also only want to trigger when the tag is pushed to `main` (or a specific branch), the recommended approach is to set an environment protection rule (in the GitHub repo settings, under 'Environments/github-pages') to only allow deployments from the specific branch; However if this is not enough for your usecase then you can uncomment the condition for the `build-documentation` job, but make sure to read the warning there.
+
+#### Other defaults you may want to change:
+ - `docfx.json` path: by default assumes it is in the `docs/` folder in the root of your repo.
+ - .NET SDK version: by default uses `8.x`, which is the minimum required by docfx.
 
 # Notes
 

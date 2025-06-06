@@ -1,9 +1,10 @@
 name: Deploy DocFX to GitHub Pages
-run-name: ${{ github.actor }} is deploying DoxFX to GitHub Pages
+run-name: ${{ github.actor }} is deploying DocFX to GitHub Pages
 on:
   push:
-    branches:
-      - 'main'
+    # If you also only want to trigger when this tag is pushed to 'main' (or a specific branch),
+    # you can uncomment the condition for the 'build-documentation' job, but see the warning.
+    # that check is done in the job because it can't be done here.
     tags:
       - 'v[0-9]+.[0-9]+*'
   
@@ -24,6 +25,9 @@ concurrency:
 
 jobs:
   build-documentation:
+    # Only run when the tag that triggered the workflow is pushed to 'main'.
+    # WARNING: not very reliable, e.g. it doesnt work if the tag is annotated.
+    # if: github.event.base_ref == 'refs/heads/main' || contains(github.event.base_ref, 'refs/heads/main')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -32,8 +36,7 @@ jobs:
           # minimum version required by docfx is 8
           dotnet-version: '8.x'
       
-      - name: Install dotnet sdk
-        run: dotnet tool install -g docfx
+      - run: dotnet tool update -g docfx
       
       - name: Generate API metadata
         working-directory: ./docs
