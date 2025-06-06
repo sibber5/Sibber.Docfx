@@ -1,3 +1,6 @@
+@REM SPDX-License-Identifier: MIT
+@REM Copyright (c) 2025 sibber (GitHub: sibber5)
+
 @echo off
 setlocal enabledelayedexpansion
 

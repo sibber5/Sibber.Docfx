@@ -55,4 +55,6 @@ The `modern` template is just the normal docfx (compiled) modern template export
 
 The file [`./ExtractSearchIndexEx/ExtractSearchIndexEx.cs`](./ExtractSearchIndexEx/ExtractSearchIndexEx.cs) was taken from [`Docfx.Build`, github.com/dotnet/docfx](https://github.com/dotnet/docfx/blob/44383167ece82d4deb7c2062de1a2e34b32607e9/src/Docfx.Build/PostProcessors/ExtractSearchIndex.cs), MIT License - Copyright (c) .NET Foundation and Contributors. See the license notice at the top of the file for more info.
 
-The rest of the [`ExtractSearchIndexEx`](./ExtractSearchIndexEx/) plugin and modifications to the file mentioned above are licensed under the MIT License - see [`./ExtractSearchIndexEx/LICENSE`](./ExtractSearchIndexEx/LICENSE) - unless otherwise stated in specific files or sections. See individual files for exceptions.
+The rest of the [`ExtractSearchIndexEx`](./ExtractSearchIndexEx/) plugin and modifications to the file mentioned above are licensed under the MIT License - see [`LICENSE`](./LICENSE) - unless otherwise stated in specific files or sections. See individual files for exceptions.
+
+All files that are not in [`ExtractSearchIndexEx/`](./ExtractSearchIndexEx/) and not in [`docfx/`](./docfx/), and the files that *are* in [`docfx/templates/customizations/`](./docfx/templates/customizations/), are licensed under the MIT License - see [`LICENSE`](./LICENSE) - unless otherwise stated in specific files or sections.
