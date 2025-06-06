@@ -1,5 +1,5 @@
-name: Deploy DocFX to GitHub Pages
-run-name: ${{ github.actor }} is deploying DocFX to GitHub Pages
+name: 'Deploy (and Build) DocFX Site to GitHub Pages'
+run-name: ${{ github.actor }} is deploying the DocFX site to GitHub Pages
 on:
   push:
     # If you also only want to trigger when this tag is pushed to 'main' (or a specific branch),
@@ -35,6 +35,7 @@ jobs:
         with:
           # minimum version required by docfx is 8
           dotnet-version: '8.x'
+          dotnet-quality: 'ga'
       
       - run: dotnet tool update -g docfx
       
