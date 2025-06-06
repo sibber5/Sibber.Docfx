@@ -35,10 +35,12 @@
     "template": [
       "default",
       "./templates/modern",
-      "./templates/custom_template"
+      "./templates/customizations"
     ],
     "postProcessors": ["ExtractSearchIndex", "ExtractSearchIndexEx"],
     "globalMetadata": {
+      "_appLogoPath": "images/icon.svg",
+      "_appFaviconPath": "images/favicon.ico",
       "_appName": "mysite",
       "_appTitle": "mysite",
       "_enableSearch": true,

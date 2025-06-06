@@ -28,3 +28,8 @@ a.xref:hover {
 .item-brief {
     font-size: medium !important;
 }
+
+img.svg#logo {
+    height: 2.5rem;
+    margin-right: 0.5rem;
+}
