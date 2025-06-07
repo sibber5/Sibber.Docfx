@@ -489,4 +489,6 @@ push.bat
 _site/
 api/
 
+docs/templates/customizations/plugins/
+
 publish_test_debug.bat
