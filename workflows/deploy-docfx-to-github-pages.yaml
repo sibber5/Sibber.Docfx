@@ -6,6 +6,7 @@ on:
     # you can uncomment the condition for the 'build-documentation' job, but see the warning.
     # that check is done in the job because it can't be done here.
     tags:
+      # Update README when updating the pattern
       - 'v[0-9]+.[0-9]+*'
   
   # Allows you to run this workflow manually from the Actions tab

@@ -26,7 +26,9 @@ The `ExtractSearchIndexEx` post processor has 2 additional configuration options
 
 ## Github Actions deployment workflow
 
-The [deployment workflow](./workflows/deploy-docfx-to-github-pages.yaml) requires GitHub Pages 'Build and deployment' source to be set to 'GitHub Actions' (in the GitHub repository settings, under 'Pages').
+To use the [deployment workflow](./workflows/deploy-docfx-to-github-pages.yaml), change the following settings in your repository:
+1. 'Pages' (under 'Code and automation') -> 'Build and deployment' source set to 'GitHub Actions'
+2. [If using tag trigger] 'Environments' (under 'Code and automation') -> 'github-pages' -> under 'Deployment branches and tags' click 'Add deployment branch or tag rule' -> add `v[0-9]*` ([fnmatch](https://ruby-doc.org/core-2.5.1/File.html#method-c-fnmatch) doesn't support more complex patterns)
 
 It is triggered when a tag that matches `v[0-9]+.[0-9]+*` is pushed.  
 If you also only want to trigger when the tag is pushed to `main` (or a specific branch), the recommended approach is to set an environment protection rule (in the GitHub repo settings, under 'Environments/github-pages') to only allow deployments from the specific branch; However if this is not enough for your usecase then you can uncomment the condition for the `build-documentation` job, but make sure to read the warning there.
