@@ -1,0 +1,89 @@
+# This is exactly the same as deploy-docfx-to-github-pages.yaml except it downloads the
+# default package icons from sibber5/nuget-configs and uses the README as the index.md.
+# *Make sure to delete docs/index.md and not have any files named icon.svg or favicon.ico in docs/images*
+name: 'Deploy (and Build) DocFX Site to GitHub Pages'
+run-name: ${{ github.actor }} is deploying the DocFX site to GitHub Pages
+on:
+  push:
+    # If you also only want to trigger when this tag is pushed to 'main' (or a specific branch),
+    # you can uncomment the condition for the 'build-documentation' job, but see the warning.
+    # that check is done in the job because it can't be done here.
+    tags:
+      - 'v[0-9]+.[0-9]+*'
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
+# However, do NOT cancel in-progress runs as we want to allow these production deployments to complete.
+concurrency:
+  group: 'pages'
+  cancel-in-progress: false
+
+jobs:
+  build-documentation:
+    # Only run when the tag that triggered the workflow is pushed to 'main'.
+    # WARNING: not very reliable, e.g. it doesnt work if the tag is annotated.
+    # if: github.event.base_ref == 'refs/heads/main' || contains(github.event.base_ref, 'refs/heads/main')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          # minimum version required by docfx is 8
+          dotnet-version: '8.x'
+          dotnet-quality: 'ga'
+
+      - run: dotnet tool update -g docfx
+
+      - run: mkdir -p docs/images
+
+      - name: Create index.md from README
+        run: cp README.md docs/index.md
+
+      - name: Prepend docfx layout header
+        working-directory: ./docs
+        run: 'sed -i "1s;^;---\n_layout: landing\n---\n\n;" index.md'
+
+      - name: Download icon
+        working-directory: ./docs/images
+        run: curl -L https://raw.githubusercontent.com/sibber5/nuget-configs/refs/heads/main/icon.svg -o icon.svg
+
+      - name: Download favicon
+        working-directory: ./docs/images
+        run: curl -L https://raw.githubusercontent.com/sibber5/nuget-configs/refs/heads/main/favicon.ico -o favicon.ico
+
+      - name: Generate API metadata
+        working-directory: ./docs
+        run: docfx metadata ./docfx.json --warningsAsErrors
+
+      - name: Build documentation
+        working-directory: ./docs
+        run: docfx build ./docfx.json --warningsAsErrors
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: './docs/_site'
+
+  deploy:
+    needs: build-documentation
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
