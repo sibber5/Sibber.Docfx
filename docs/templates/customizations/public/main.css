@@ -1,0 +1,38 @@
+/* SPDX-License-Identifier: MIT */
+/* Copyright (c) 2025 sibber (GitHub: sibber5) */
+
+a.xref {
+    text-decoration-line: none;
+}
+
+a.xref:hover {
+    text-decoration-line: underline;
+}
+
+.item-title a {
+    color: var(--bs-link-color);
+    text-decoration-line: none;
+}
+
+.item-title a:hover {
+    text-decoration-line: underline;
+}
+
+.item-href {
+    color: unset !important;
+    font-style: oblique;
+    opacity: 0.6;
+    margin-top: -0.4em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.item-brief {
+    font-size: medium !important;
+}
+
+img.svg#logo {
+    height: 2.5rem;
+    margin-right: 0.5rem;
+}
