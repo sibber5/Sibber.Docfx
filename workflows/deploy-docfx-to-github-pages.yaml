@@ -6,9 +6,8 @@ on:
     # you can uncomment the condition for the 'build-documentation' job, but see the warning.
     # that check is done in the job because it can't be done here.
     tags:
-      # Update README when updating the pattern
       - 'v[0-9]+.[0-9]+*'
-  
+
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
@@ -21,7 +20,7 @@ permissions:
 # Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
 # However, do NOT cancel in-progress runs as we want to allow these production deployments to complete.
 concurrency:
-  group: "pages"
+  group: 'pages'
   cancel-in-progress: false
 
 jobs:
@@ -37,17 +36,67 @@ jobs:
           # minimum version required by docfx is 8
           dotnet-version: '8.x'
           dotnet-quality: 'ga'
-      
+
       - run: dotnet tool update -g docfx
-      
+
+      # Uncomment the following region if you want to use the skeleton, with only overrides in your repo
+      # REGION START - USE SKELETON
+      # - name: Rename ./docs so it does not conflict with skeleton
+      #   run: mv ./docs ./docs-26ab5644-c470-4946-82d2-4a2a1927e983
+
+      # - name: Clone skeleton
+      #   uses: actions/checkout@v4
+      #   with:
+      #     repository: 'sibber5/Sibber.Docfx'
+      #     ref: skeleton
+      #     path: './'
+
+      # - name: Merge docfx.json
+      #   run: |
+      #     if [ -f ./docs-26ab5644-c470-4946-82d2-4a2a1927e983/docfx.override.json ]; then
+      #       jq -s '.[0] * .[1]' ./docs/docfx.base.json ./docs-26ab5644-c470-4946-82d2-4a2a1927e983/docfx.override.json > ./docs/docfx.json
+      #       rm -f ./docs/docfx.base.json
+      #       rm -f ./docs-26ab5644-c470-4946-82d2-4a2a1927e983/docfx.override.json
+      #     else
+      #       mv ./docs/docfx.base.json ./docs/docfx.json
+      #     fi
+
+      #     jq . ./docs/docfx.json
+
+      # - name: Merge skeleton
+      #   run: rsync -a ./docs-26ab5644-c470-4946-82d2-4a2a1927e983/ ./docs/
+      # REGION END - USE SKELETON
+
+      # Uncomment the following region if you want to downloads the default package icons
+      # from sibber5/nuget-configs and uses the README as the index.md.
+      # *And make sure to delete docs/index.md and not have any files named icon.svg or favicon.ico in docs/images*
+      # REGION START - DEFAULTS FOR PACKAGES
+      # - run: mkdir -p docs/images
+
+      # - name: Create index.md from README
+      #   run: cp README.md docs/index.md
+
+      # - name: Prepend docfx layout header
+      #   working-directory: ./docs
+      #   run: 'sed -i "1s;^;---\n_layout: landing\n---\n\n;" index.md'
+
+      # - name: Download icon
+      #   working-directory: ./docs/images
+      #   run: curl -L https://raw.githubusercontent.com/sibber5/nuget-configs/refs/heads/main/icon.svg -o icon.svg
+
+      # - name: Download favicon
+      #   working-directory: ./docs/images
+      #   run: curl -L https://raw.githubusercontent.com/sibber5/nuget-configs/refs/heads/main/favicon.ico -o favicon.ico
+      # REGION END - DEFAULTS FOR PACKAGES
+
       - name: Generate API metadata
         working-directory: ./docs
         run: docfx metadata ./docfx.json --warningsAsErrors
-      
+
       - name: Build documentation
         working-directory: ./docs
         run: docfx build ./docfx.json --warningsAsErrors
-      
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
@@ -58,7 +107,7 @@ jobs:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-    
+
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
