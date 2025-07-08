@@ -10,7 +10,10 @@
           ]
         }
       ],
-      "dest": "api"
+      "dest": "api",
+      "properties": {
+        "DefineConstants": "DOCFX"
+      }
     }
   ],
   "build": {
