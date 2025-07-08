@@ -17,6 +17,12 @@
     }
   ],
   "build": {
+    "markdownEngineProperties": {
+      "alerts": {
+        "THREADSAFE": "alert alert-info",
+        "THREADUNSAFE": "alert alert-danger"
+      }
+    },
     "content": [
       {
         "files": [
