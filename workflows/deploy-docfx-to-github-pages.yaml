@@ -1,5 +1,4 @@
 # v1.0.0
-
 name: 'Deploy (and Build) DocFX Site to GitHub Pages'
 run-name: ${{ github.actor }} is deploying the DocFX site to GitHub Pages
 on:
