@@ -11,6 +11,7 @@
         }
       ],
       "dest": "api",
+      "enumSortOrder": "declaringOrder",
       "properties": {
         "DefineConstants": "DOCFX"
       }
