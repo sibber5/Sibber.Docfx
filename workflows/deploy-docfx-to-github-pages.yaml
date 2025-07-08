@@ -1,3 +1,5 @@
+# v1.0.0
+
 name: 'Deploy (and Build) DocFX Site to GitHub Pages'
 run-name: ${{ github.actor }} is deploying the DocFX site to GitHub Pages
 on:
@@ -70,7 +72,7 @@ jobs:
       #   run: rsync -a ./docs-26ab5644-c470-4946-82d2-4a2a1927e983/ ./docs/
       # REGION END - USE SKELETON
 
-      # Uncomment the following region if you want to downloads the default package icons
+      # Uncomment the following region if you want to download the default package icons
       # from sibber5/nuget-configs and uses the README as the index.md.
       # *And make sure to delete docs/index.md and not have any files named icon.svg or favicon.ico in docs/images*
       # REGION START - DEFAULTS FOR PACKAGES
