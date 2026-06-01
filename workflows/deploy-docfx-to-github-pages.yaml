@@ -1,4 +1,4 @@
-# v1.0.0
+# v1.1.0
 name: 'Deploy (and Build) DocFX Site to GitHub Pages'
 run-name: ${{ github.actor }} is deploying the DocFX site to GitHub Pages
 on:
@@ -31,8 +31,8 @@ jobs:
     # if: github.event.base_ref == 'refs/heads/main' || contains(github.event.base_ref, 'refs/heads/main')
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/checkout@v6
+      - uses: actions/setup-dotnet@v5
         with:
           # minimum version required by docfx is 8
           dotnet-version: '8.x'
@@ -46,7 +46,7 @@ jobs:
       #   run: mv ./docs ./docs-26ab5644-c470-4946-82d2-4a2a1927e983
 
       # - name: Clone skeleton
-      #   uses: actions/checkout@v4
+      #   uses: actions/checkout@v6
       #   with:
       #     repository: 'sibber5/Sibber.Docfx'
       #     ref: skeleton
@@ -102,7 +102,7 @@ jobs:
         run: docfx build ./docfx.json --warningsAsErrors
 
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v5
         with:
           path: './docs/_site'
 
@@ -115,9 +115,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: Setup Pages
-        uses: actions/configure-pages@v5
+        uses: actions/configure-pages@v6
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
