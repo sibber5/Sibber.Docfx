@@ -20,6 +20,11 @@
   "build": {
     "markdownEngineProperties": {
       "alerts": {
+        "NOTE": "alert alert-info",
+        "TIP": "alert alert-tip",
+        "WARNING": "alert alert-warning",
+        "IMPORTANT": "alert alert-important",
+        "CAUTION": "alert alert-danger",
         "THREADSAFE": "alert alert-info",
         "THREADUNSAFE": "alert alert-danger"
       }
