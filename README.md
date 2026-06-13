@@ -112,9 +112,10 @@ The `modern` template is just the normal docfx (compiled) modern template export
  - [`public/search-worker.min.js`](./docs/templates/modern/public/search-worker.min.js): replaced with fuse.js impl https://gist.github.com/filzrev/9a046c40f6df63d01f40018d8a19bd47 and modified
  - `public/search-worker.min.js.map`: deleted
  - [`public/docfx.min.js`](./docs/templates/modern/public/docfx.min.js):
-    - Line 17, removed `+"?q="+It` (search query from redirect url when clicking on a search result) so that fragment identifiers work
-    - Line 15, removed `let{lunrLanguages:e}=await D();i.postMessage({init:{lunrLanguages:e}});`
     - Line 6, removed `, "lunrLanguages"`
+    - Line 15, removed `let{lunrLanguages:e}=await D();i.postMessage({init:{lunrLanguages:e}});`
+    - Line 17, removed `+"?q="+It` (search query from redirect url when clicking on a search result) so that fragment identifiers work
+    - Line 19, removed `target="_blank" rel="noopener noreferrer"` attributes from search result item so that it doesn't open in a new tab
  - `public/docfx.min.js.map`:
     - Line 4, removed corresponding ` + '?q=' + query`
     - Line 4, removed corresponsing `const { lunrLanguages } = await options()\n  worker.postMessage({ init: { lunrLanguages } })\n\n  `
