@@ -73,10 +73,22 @@
           <div class="collapse navbar-collapse" id="navpanel">
             <div id="navbar">
               {{#_enableSearch}}
-              <form class="search" role="search" id="search">
+              <form class="search d-flex align-items-center" role="search" id="search">
                 <i class="bi bi-search"></i>
                 <input class="form-control" id="search-query" type="search" disabled placeholder="{{__global.search}}" autocomplete="off" aria-label="Search">
+                <a href="javascript:void(0)" class="ms-2 text-muted" tabindex="0" data-bs-toggle="popover" data-bs-trigger="hover focus" data-bs-placement="bottom" title="Extended Search Syntax" data-bs-content="You can use operators like =, !, ^, etc. To search for punctuation exactly, wrap your query in double quotes (e.g., &quot;!isReady&quot;).">
+                  <i class="bi bi-info-circle fs-5"></i>
+                </a>
               </form>
+              <script>
+                // Initialize Bootstrap popovers when DOM is ready
+                document.addEventListener('DOMContentLoaded', function () {
+                  var popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'))
+                  var popoverList = popoverTriggerList.map(function (popoverTriggerEl) {
+                    return new bootstrap.Popover(popoverTriggerEl)
+                  })
+                })
+              </script>
               {{/_enableSearch}}
             </div>
           </div>
