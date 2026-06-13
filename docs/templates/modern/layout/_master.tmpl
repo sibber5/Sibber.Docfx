@@ -73,22 +73,98 @@
           <div class="collapse navbar-collapse" id="navpanel">
             <div id="navbar">
               {{#_enableSearch}}
-              <form class="search d-flex align-items-center" role="search" id="search">
+              <style>
+                #search-query {
+                  padding-right: 2.5rem;
+                }
+                #search-query::-webkit-search-cancel-button {
+                  margin-right: 1.2rem;
+                }
+                .search-info-wrapper {
+                  position: absolute;
+                  right: 0.8rem;
+                  top: 50%;
+                  transform: translateY(-50%);
+                  cursor: help;
+                  z-index: 1050;
+                  display: flex;
+                  align-items: center;
+                }
+                .search-popup {
+                  position: absolute;
+                  top: calc(100% + 12px);
+                  right: -10px;
+                  width: 500px;
+                  max-width: calc(100vw - 30px);
+                  background: var(--bs-popover-bg, var(--bs-body-bg));
+                  border: 1px solid var(--bs-popover-border-color, var(--bs-border-color-translucent));
+                  border-radius: var(--bs-border-radius);
+                  padding: 1rem;
+                  font-size: 0.9em;
+                  opacity: 0;
+                  visibility: hidden;
+                  transform: translateY(-5px) scale(0.98);
+                  transform-origin: top right;
+                  transition: opacity 0.1s ease-out 0.1s, transform 0.1s ease-out 0.1s, visibility 0s 0.2s;
+                  box-shadow: var(--bs-box-shadow, 0 0.5rem 1rem rgba(0, 0, 0, 0.15));
+                  color: var(--bs-popover-body-color, var(--bs-body-color));
+                  z-index: 1060;
+                }
+                .search-popup::before {
+                  content: '';
+                  position: absolute;
+                  top: -40px;
+                  left: 460px;
+                  right: 0px;
+                  height: 60px;
+                }
+                .search-info-wrapper:hover .search-popup,
+                .search-info-wrapper:focus-within .search-popup {
+                  opacity: 1;
+                  visibility: visible;
+                  transform: translateY(0) scale(1);
+                  transition: opacity 0.1s ease-out, transform 0.1s ease-out, visibility 0s;
+                }
+                .search-operators {
+                  column-count: 2;
+                  column-gap: 1rem;
+                }
+                .search-operators li {
+                  margin-bottom: 0.25rem;
+                  break-inside: avoid;
+                }
+                .search-operators li code:first-child {
+                  display: inline-block;
+                  width: 50px;
+                }
+              </style>
+              <form class="search" role="search" id="search">
                 <i class="bi bi-search"></i>
                 <input class="form-control" id="search-query" type="search" disabled placeholder="{{__global.search}}" autocomplete="off" aria-label="Search">
-                <a href="javascript:void(0)" class="ms-2 text-muted" tabindex="0" data-bs-toggle="popover" data-bs-trigger="hover focus" data-bs-placement="bottom" title="Extended Search Syntax" data-bs-content="You can use operators like =, !, ^, etc. To search for punctuation exactly, wrap your query in double quotes (e.g., &quot;!isReady&quot;).">
-                  <i class="bi bi-info-circle fs-5"></i>
-                </a>
+                <div class="search-info-wrapper" tabindex="0">
+                  <i class="bi bi-info-circle text-muted fs-6"></i>
+                  <div class="search-popup text-body">
+                    <h6 class="border-bottom pb-2 mb-2">Extended Search Syntax</h6>
+                    <p class="mb-2">Search supports unix-like search operators:</p>
+                    <ul class="mb-2 ps-3 search-operators">
+                      <li><code>query</code> Fuzzy matches <code>query</code></li>
+                      <li><code>=query</code> Exact matches <code>query</code></li>
+                      <li><code>'query</code> Includes <code>query</code></li>
+                      <li><code>!query</code> Excludes <code>query</code></li>
+                      <li><code>^query</code> Starts with <code>query</code></li>
+                      <li><code>!^query</code> Does not start with <code>query</code></li>
+                      <li><code>query$</code> Ends with <code>query</code></li>
+                      <li><code>!query$</code> Does not end with <code>query</code></li>
+                    </ul>
+                    <p class="mb-2"><strong>Whitespace</strong> acts as <strong>AND</strong>, while <strong>pipe</strong> (<code>|</code>) acts as <strong>OR</strong>.</p>
+                    <p class="mb-2"><i>Example:</i> <code>'Man 'Old | Artist$</code>  searches for items that include <code>Man</code> AND <code>Old</code>, OR end with <code>Artist</code>.</p>
+                    <div class="alert alert-info py-1 px-2 mb-2" role="alert" style="font-size: 0.85em;">
+                      <strong>Note:</strong> To search for code containing these punctuation marks, wrap your query in double quotes (e.g., <code>"!IsReady"</code>).
+                    </div>
+                    <a href="https://www.fusejs.io/extended-search.html#operators" target="_blank" class="d-block mt-2">Read more in Fuse.js docs</a>
+                  </div>
+                </div>
               </form>
-              <script>
-                // Initialize Bootstrap popovers when DOM is ready
-                document.addEventListener('DOMContentLoaded', function () {
-                  var popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'))
-                  var popoverList = popoverTriggerList.map(function (popoverTriggerEl) {
-                    return new bootstrap.Popover(popoverTriggerEl)
-                  })
-                })
-              </script>
               {{/_enableSearch}}
             </div>
           </div>

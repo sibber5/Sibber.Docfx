@@ -9,7 +9,7 @@ export default {
             title: 'GitHub'
         },
         {
-            icon: 'box-seam-fill',
+            icon: 'nuget',
             href: 'https://www.nuget.org/packages/z',
             title: 'NuGet'
         }
