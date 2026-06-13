@@ -114,6 +114,7 @@ The `modern` template is just the normal docfx (compiled) modern template export
  - [`public/docfx.min.js`](./docs/templates/modern/public/docfx.min.js):
     - Line 6, removed `, "lunrLanguages"`
     - Line 15, removed `let{lunrLanguages:e}=await D();i.postMessage({init:{lunrLanguages:e}});`
+    - Line 15 (col 9455), added .trim() to search query and removed `.split(" ").map(r=>"+"+r).join(" ")`
     - Line 17, removed `+"?q="+It` (search query from redirect url when clicking on a search result) so that fragment identifiers work
     - Line 19, removed `target="_blank" rel="noopener noreferrer"` attributes from search result item so that it doesn't open in a new tab
  - `public/docfx.min.js.map`:
